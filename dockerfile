@@ -61,6 +61,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # ============================================
+# FOXGLOVE BRIDGE (Visualization)
+# ============================================
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ros-humble-foxglove-bridge \
+    && rm -rf /var/lib/apt/lists/*
+
+# ============================================
 # SYSTEM MONITORING TOOLS
 # ============================================
 RUN apt-get update && apt-get install -y --no-install-recommends \
