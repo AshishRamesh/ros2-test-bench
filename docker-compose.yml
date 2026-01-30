@@ -1,0 +1,50 @@
+services:
+  ros2-bench:
+    build:
+      context: .
+      dockerfile: dockerfile
+    image: ros2-middleware-bench
+    container_name: ros2_bench
+
+    # Host network mode - CRITICAL for:
+    # 1. DDS discovery with Pi
+    # 2. Topics visible on host (for rqt_image_view, rviz, etc.)
+    network_mode: host
+
+    # Mount workspace - edit on host, build in container
+    volumes:
+      - ./ros2_ws:/ros2_ws
+
+    environment:
+      - RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
+      - ROS_DOMAIN_ID=0
+
+    stdin_open: true
+    tty: true
+
+  # Fast DDS variant
+  ros2-fastdds:
+    extends:
+      service: ros2-bench
+    container_name: ros2_fastdds
+    environment:
+      - RMW_IMPLEMENTATION=rmw_fastrtps_cpp
+      - ROS_DOMAIN_ID=0
+
+  # Cyclone DDS variant
+  ros2-cyclone:
+    extends:
+      service: ros2-bench
+    container_name: ros2_cyclone
+    environment:
+      - RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
+      - ROS_DOMAIN_ID=0
+
+  # Zenoh variant
+  ros2-zenoh:
+    extends:
+      service: ros2-bench
+    container_name: ros2_zenoh
+    environment:
+      - RMW_IMPLEMENTATION=rmw_zenoh_cpp
+      - ROS_DOMAIN_ID=0
