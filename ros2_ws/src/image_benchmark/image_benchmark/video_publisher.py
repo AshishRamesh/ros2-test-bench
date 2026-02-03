@@ -25,7 +25,7 @@ class VideoPublisher(Node):
         super().__init__('video_publisher')
 
         # Declare parameters
-        self.declare_parameter('video_file', '/home/ashish/ros2/docker_ws/video.mp4')
+        self.declare_parameter('video_file', '~/ros2-test-bench/video.mp4')
         self.declare_parameter('width', 640)
         self.declare_parameter('height', 480)
         self.declare_parameter('fps', 30)
