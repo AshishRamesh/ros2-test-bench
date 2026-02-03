@@ -58,6 +58,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ros-humble-topic-tools \
     ros-humble-ros2topic \
     ros-humble-ros2node \
+    ros-humble-cv-bridge \
+    ros-humble-sensor-msgs \
+    ros-humble-rosidl-default-generators \
+    ros-humble-rosidl-default-runtime \
+    python3-opencv \
     && rm -rf /var/lib/apt/lists/*
 
 # ============================================
@@ -82,10 +87,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Python packages for benchmarking scripts
+# Note: numpy<2 required for compatibility with ROS Humble cv_bridge
 RUN pip3 install \
+    "numpy<2" \
     matplotlib \
-    pandas \
-    numpy
+    pandas
 
 # ============================================
 # ENVIRONMENT SETUP

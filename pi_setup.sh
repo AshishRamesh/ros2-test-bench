@@ -175,6 +175,10 @@ alias cam_formats='v4l2-ctl -d /dev/video0 --list-formats-ext'
 # Quick camera publisher (default settings)
 alias cam_pub='ros2 run v4l2_camera v4l2_camera_node --ros-args -p video_device:=/dev/video0'
 
+# Benchmark publisher (uses OpenCV - more compatible)
+alias bench_pub='ros2 run image_benchmark benchmark_publisher'
+alias bench_pub_hd='ros2 run image_benchmark benchmark_publisher --ros-args -p width:=1280 -p height:=720 -p fps:=15'
+
 # Show current middleware
 alias show_rmw='echo "Current RMW: $RMW_IMPLEMENTATION"'
 
@@ -185,6 +189,7 @@ echo "Domain ID: $ROS_DOMAIN_ID"
 echo "=================================="
 echo "Commands: use_cyclone, use_fastdds, use_zenoh"
 echo "Camera:   cam_pub, cam_list, cam_info"
+echo "Benchmark: bench_pub, bench_pub_hd"
 echo "=================================="
 EOF
 
@@ -307,10 +312,71 @@ chmod +x ~/ros2_scripts/test_middleware.sh
 # INSTALL PYTHON TOOLS FOR BENCHMARKING
 # =============================================================================
 print_status "Installing Python benchmarking tools..."
+# Note: numpy<2 required for compatibility with ROS Humble cv_bridge
 pip3 install --user \
+    "numpy<2" \
     matplotlib \
-    pandas \
-    numpy
+    pandas
+
+# =============================================================================
+# SETUP ROS 2 WORKSPACE FOR BENCHMARK PACKAGES
+# =============================================================================
+print_status "Setting up ROS 2 workspace..."
+mkdir -p ~/ros2_ws/src
+
+# Add workspace sourcing to bashrc (will be populated with packages later)
+cat >> ~/.bashrc << 'WORKSPACE_EOF'
+
+# Source local workspace if built
+if [ -f ~/ros2_ws/install/setup.bash ]; then
+    source ~/ros2_ws/install/setup.bash
+fi
+WORKSPACE_EOF
+
+# =============================================================================
+# INSTALL MESSAGE GENERATION DEPENDENCIES
+# =============================================================================
+print_status "Installing message generation packages..."
+sudo apt install -y \
+    ros-humble-rosidl-default-generators \
+    ros-humble-rosidl-default-runtime
+
+# =============================================================================
+# CREATE BENCHMARK INSTALL SCRIPT
+# =============================================================================
+print_status "Creating benchmark package install script..."
+
+cat > ~/ros2_scripts/install_benchmark.sh << 'EOF'
+#!/bin/bash
+# Install benchmark packages from host machine
+# Usage: ./install_benchmark.sh <host_ip>
+#   or copy packages manually to ~/ros2_ws/src/
+
+HOST_IP=${1:-""}
+
+if [ -n "$HOST_IP" ]; then
+    echo "Copying benchmark packages from $HOST_IP..."
+    scp -r $HOST_IP:~/ros2/docker_ws/ros2_ws/src/image_benchmark ~/ros2_ws/src/
+    scp -r $HOST_IP:~/ros2/docker_ws/ros2_ws/src/image_benchmark_msgs ~/ros2_ws/src/
+fi
+
+echo "Building benchmark packages..."
+cd ~/ros2_ws
+
+# Build messages first, then main package
+colcon build --packages-select image_benchmark_msgs
+source install/setup.bash
+colcon build --packages-select image_benchmark
+source install/setup.bash
+
+echo ""
+echo "Benchmark packages installed!"
+echo "Usage:"
+echo "  ros2 run image_benchmark benchmark_publisher"
+echo "  ros2 run image_benchmark benchmark_publisher --ros-args -p width:=1280 -p height:=720"
+EOF
+
+chmod +x ~/ros2_scripts/install_benchmark.sh
 
 # =============================================================================
 # SUMMARY
@@ -326,11 +392,13 @@ echo "  - Fast DDS (rmw_fastrtps_cpp)"
 echo "  - Cyclone DDS (rmw_cyclonedds_cpp)"
 echo "  - Zenoh (rmw_zenoh_cpp)"
 echo "  - Pi Camera packages (v4l2_camera)"
+echo "  - Python tools (numpy<2, matplotlib, pandas)"
 echo ""
 echo "Scripts created in ~/ros2_scripts/:"
 echo "  - start_camera.sh [resolution] [fps]"
 echo "  - benchmark_camera.sh [middleware] [resolution]"
 echo "  - test_middleware.sh"
+echo "  - install_benchmark.sh [host_ip]"
 echo ""
 echo "Quick commands (after reboot):"
 echo "  use_cyclone    - Switch to Cyclone DDS"
@@ -341,10 +409,18 @@ echo "  cam_list       - List camera devices"
 echo ""
 echo -e "${YELLOW}IMPORTANT: Reboot required for camera to work!${NC}"
 echo ""
-echo "After reboot, test with:"
+echo "After reboot:"
 echo "  1. cam_list              # Check camera detected"
 echo "  2. test_middleware.sh    # Test ROS 2 works"
-echo "  3. cam_pub               # Start publishing"
+echo ""
+echo "To install benchmark packages (after copying from host):"
+echo "  cd ~/ros2_ws/src"
+echo "  # Copy image_benchmark and image_benchmark_msgs here"
+echo "  ~/ros2_scripts/install_benchmark.sh"
+echo ""
+echo "Then run benchmark publisher:"
+echo "  use_cyclone"
+echo "  ros2 run image_benchmark benchmark_publisher"
 echo ""
 read -p "Reboot now? (y/n) " -n 1 -r
 echo
