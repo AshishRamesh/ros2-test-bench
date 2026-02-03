@@ -165,7 +165,7 @@ export ROS_DOMAIN_ID=0
 # Middleware switching aliases
 alias use_cyclone='export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp && echo "Switched to Cyclone DDS"'
 alias use_fastdds='export RMW_IMPLEMENTATION=rmw_fastrtps_cpp && echo "Switched to Fast DDS"'
-alias use_zenoh='export RMW_IMPLEMENTATION=rmw_zenoh_cpp && echo "Switched to Zenoh"'
+alias use_zenoh='export RMW_IMPLEMENTATION=rmw_zenoh_cpp && export ZENOH_ROUTER_CONFIG_URI=~/ros2/docker_ws/zenoh_router_config.json5 && echo "Switched to Zenoh (config: $ZENOH_ROUTER_CONFIG_URI)"'
 
 # Camera aliases
 alias cam_list='v4l2-ctl --list-devices'
@@ -260,6 +260,7 @@ case $MIDDLEWARE in
         ;;
     zenoh)
         export RMW_IMPLEMENTATION=rmw_zenoh_cpp
+        export ZENOH_ROUTER_CONFIG_URI=~/ros2/docker_ws/zenoh_router_config.json5
         ;;
     *)
         echo "Unknown middleware: $MIDDLEWARE"
