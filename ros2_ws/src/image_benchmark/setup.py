@@ -21,6 +21,7 @@ setup(
             'benchmark_publisher = image_benchmark.benchmark_publisher:main',
             'benchmark_subscriber = image_benchmark.benchmark_subscriber:main',
             'compare_results = image_benchmark.compare_results:main',
+            'video_publisher = image_benchmark.video_publisher:main',
         ],
     },
 )
