@@ -11,6 +11,7 @@ from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
 import cv2
 import time
+import os
 from collections import deque
 
 # Import custom message from separate package
@@ -31,8 +32,8 @@ class VideoPublisher(Node):
         self.declare_parameter('fps', 30)
         self.declare_parameter('loop', True)
 
-        # Get parameters
-        self.video_file = self.get_parameter('video_file').value
+        # Get parameters and expand ~ in path
+        self.video_file = os.path.expanduser(self.get_parameter('video_file').value)
         self.width = self.get_parameter('width').value
         self.height = self.get_parameter('height').value
         self.target_fps = self.get_parameter('fps').value
